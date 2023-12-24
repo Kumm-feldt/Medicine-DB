@@ -1,0 +1,91 @@
+{% extends 'base.html' %}
+{% block h1 %} RECIBO DE PEDIDOS {% endblock %}
+{%block content%}
+    <div class="wrapper small-div">
+    <div class="information ">
+
+        <form method="POST" id="receipt" action="/receipt/add_order">
+                <input type="number" placeholder="ID" name="id" class="inputs">
+                <input type="number" placeholder="Cantidad" name="amount" class="inputs">
+                <input type="submit" placeholder="Agregar" name="submit" class="inputs">
+                <input type="hidden" name="user_name" value="{{ user_name }}">
+        </form>
+        <form action="{{ url_for('receipt_order') }}" method="get">
+          <button type="submit">Agregar Usuario</button>
+      </form>
+       
+    </div>
+
+    {% if data_user %}
+    <div class="user-div table1" >
+      <h2>CLIENTES & COMPRAS</h2>
+        <div class="user-info'div">
+            <table class="table-div">
+            <tr class="row-header">
+                 <th>ID</th>
+                <th>Nombre Usuario</th>
+                <th>Producto</th>
+                <th>Cantidad</th>
+                <th>Precio Unit. Q. </th>
+                <th>Precio total  Q.</th>
+                
+    
+    
+              </tr>
+            {% for element in orders %}
+            <tr>
+                <td>{{ element[3] }}</td>
+                <td>{{ element[2] }}</td>
+                <td>{{ element[6]}}</td>
+                <td>{{ element[4] }}</td>
+                <td>Q.{{ element[7] }}</td>
+                <td>Q.{{ element[5] }}</td>
+                <td>
+                  <form method="post" action="{{ url_for('delete_order', order_id=element[0], username=user_name)}}">
+                      <button class="delete" type="submit">
+                        <img src="/static/delete.svg" alt="delete icon" class="delete-svg">
+                      </button>
+                  </form>
+                </td>
+    
+              </tr>
+            {% endfor %}
+            </table>
+        </div>
+        </div>
+{% endif %}
+
+
+{% if products %}
+    <div class="user-div table2" >
+      <h2>RECIBO TOTAL</h2>
+        <div class="user-info'div">
+            <table id="elements" class="table-div">
+            <tr class="row-header">
+                 <th>ID</th>
+                <th>Nombre</th>
+                <th>Cantidad</th>
+                <th>Precio Original</th>
+                <th>Precio Unit. Q. </th>
+                <th>Precio total  Q.</th>
+
+    
+    
+              </tr>
+            {% for element in products %}
+            <tr>
+                <td>{{ element[4] }}</td>
+                <td>{{ element[0] }}</td>
+                <td>{{ element[1] }}</td>
+                <td>$.{{ element[2] }}</td>
+                <td>Q.{{ element[3] }}</td>
+                <td>Q.{{ element[5] }}</td>
+    
+              </tr>
+            {% endfor %}
+            </table>
+        </div>
+        </div>
+{% endif %}
+    </div>
+    {% endblock %}

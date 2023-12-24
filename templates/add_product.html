@@ -1,0 +1,48 @@
+
+{% extends 'base.html' %}
+{% block h1 %} AGREGAR PRODUCTO {% endblock %}
+
+{%block content%}
+    <div class="edit-div" id="searchMedCode">
+        <div id="editField">
+          <form method="POST" id="searchCode">
+          <input class="input" type="text" placeholder="Producto" name="product">
+          <input class="input" type="text" placeholder="Precio $." name="price_d">
+          <input class="input" type="text" placeholder="Precio de venta Q." name="sell_public">
+          <input class="input" type="text" placeholder="Url" name="url">
+          <input class="submit-input" type="submit" value="Agregar Producto">
+         </form>
+        </div>
+
+ <script src="{{ url_for('static', filename='script.js') }}"></script>
+  </div>
+  {% if products %}
+  <div class="user-info'div">
+    <table id="demo">
+    <tr class="row-header">
+         <th>ID</th>
+        <th>Codigo</th>
+        <th>Nombre</th>
+        <th>Precio Original</th>
+        <th>Precio Q. </th>
+        <th>Posible Precio de Venta Q.</th>
+
+
+      </tr>
+    {% for med in products %}
+    <tr>
+        <td>{{ med[0] }}</td>
+        <td>{{ med[1] }}</td>
+        <td>{{ med[2] }}</td>
+        <td>$.{{ med[3] }}</td>
+        <td>Q.{{ med[4] }}</td>
+        <td>Q.{{ med[5] }}</td>
+
+      </tr>
+    {% endfor %}
+    </table>
+</div>
+{% endif %}
+
+
+{% endblock %}

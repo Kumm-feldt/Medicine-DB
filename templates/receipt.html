@@ -1,0 +1,100 @@
+{% extends 'base.html' %}
+{% block h1 %} RECIBO DE PEDIDO {% endblock %}
+{%block content%}
+    <div class="wrapper">
+    <h2 class="title-h2">Agregar Producto</h2>
+    <div class="information">
+        <form method="POST" id="receipt" action="{{ url_for('receipt') }}">
+                <input type="text" placeholder="Producto" name="product" class="inputs">
+                <input type="number" placeholder="Cantidad" name="amount" class="inputs">
+                <input type="text" placeholder="Precio $." name="price" class="inputs">
+                <input type="submit" placeholder="Add" name="submit" class="inputs">
+        </form>
+    </div>
+    <div class="balance-div">
+       <table id="balance" class="table-div">
+            <tr class="row-header h-balance">
+                 <th colspan="2">Total</th>
+            </tr>
+            <tr>
+                <td>Q. {{ total_q }}</td>
+                <td>$. {{ total_d }}</td>
+            </tr>
+            <tr class="row-header h-balance">
+                <th colspan="2">Pagado</th>
+           </tr>
+           <tr>
+               <td>Q. {{ payed_q }}</td>
+               <td>$. {{ payed_d }}</td>
+           </tr>
+           <tr class="row-header h-balance">
+            <th colspan="2">Restante</th>
+       </tr>
+       <tr>
+           
+           <td>Q. {{ remainder_q }}</td>
+           <td>$. {{ remainder_d }}</td>
+       </tr>
+           <tr class="row-header h-balance">
+            <th colspan="2">Balance Banrural </th>
+       </tr>
+       <tr>
+            <td>Q. {{ balance_bank_q}}</td>
+           <td>$. {{ balance_bank_d }}</td>
+          
+       </tr>
+       </table>
+       <div class="balance-form">
+        <form method="POST" action="{{ url_for('receipt') }}">
+        <p class="p-titles">Agregar Pago</p>
+        <input type="text" placeholder="Q. 00.00" name="add_payment" class="inputs">
+        <input type="submit" placeholder="Add" name="submit" class="inputs">
+         </form>
+        {% if not payed_d %}       
+         <form method="POST" action="{{ url_for('receipt') }}">
+        <p class="p-titles">Balance inicial Banrural</p>
+        <input type="text" placeholder="Q. 00.00" name="add_bank_balance" class="inputs">
+        <input type="submit" placeholder="Add" name="submit" class="inputs">
+    </form>
+        {% endif %}
+          </div>
+    </div>
+
+
+{% if products %}
+    <div class="user-div" >
+        <div class="user-info'div">
+            <table id="elements" class="table-div">
+            <tr class="row-header">
+                 <th>ID</th>
+                <th>Nombre</th>
+                <th>Cantidad</th>
+                <th>Precio Original</th>
+                <th>Precio Unit. Q. </th>
+                <th>Precio total  Q.</th>
+
+    
+    
+              </tr>
+            {% for element in products %}
+            <tr>
+                <td>{{ element[4] }}</td>
+                <td>{{ element[0] }}</td>
+                <td>{{ element[1] }}</td>
+                <td>$.{{ element[2] }}</td>
+                <td>Q.{{ element[3] }}</td>
+                <td>Q.{{ element[5] }}</td>
+    
+              </tr>
+            {% endfor %}
+            <tr>
+                <td>Total </td>
+                <td>Q. {{total_q}} </td>
+            </tr>
+            </table>
+        </div>
+        </div>
+{% endif %}
+    </div>
+
+    {% endblock %}

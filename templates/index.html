@@ -1,0 +1,51 @@
+{% extends 'base.html' %}
+{% block h1 %} BASE DE DATOS MEDICINAS {% endblock %}
+
+{%block content%}
+{% if products %}
+    <div class="user-div">
+    <div class="user-info-div">
+        <table id="demo">
+        <tr class="row-header">
+             <th>ID</th>
+            <th>Codigo</th>
+            <th>Nombre</th>
+            <th>Precio Original</th>
+            <th>Precio Q. </th>
+            <th>Posible Precio de Venta Q.</th>
+
+
+          </tr>
+        {% for med in products %}
+        <tr>
+            <td>{{ med[0] }}</td>
+            <td>{{ med[1] }}</td>
+            <td>{{ med[2] }}</td>
+            <td>$.{{ med[3] }}</td>
+            <td>Q.{{ med[4] }}</td>
+            <td>Q.{{ med[5] }}</td>
+             <td>
+                  <form method="post" action="{{ url_for('delete_product', order_id=med[0])}}">
+                      <button class="delete" type="submit">
+                        <img src="/static/delete.svg" alt="delete icon" class="delete-svg">
+                      </button>
+                  </form>
+                </td>
+
+          </tr>
+        {% endfor %}
+        </table>
+    </div>
+    </div>
+    <div class="buttons">
+      <button class="button btn-edit" id="editButton" onclick="toggleEditField()"><span>Editar </span></button>
+      <button class="button btn-edit" id="addButton" onclick="toggleAdd()"><span>Agregar </span></button>
+    </div>
+{%  else %}
+   <div class="empty-div">
+       <p>Parece ser que no tienes pedidos aun!</p>
+       <button class="button btn-edit button-empty"  onclick="toggleAdd()"><span>Agregar </span></button>
+   </div>
+{% endif %}
+ {% endblock %}
+

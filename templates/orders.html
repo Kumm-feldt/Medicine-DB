@@ -1,0 +1,46 @@
+{% extends 'base.html' %}
+{% block h1 %} ORDENES {% endblock %}
+{%block content%}
+
+{% if orders%}
+    <div class="wrapper">
+    <div class="user-div" >
+        <div class="user-info'div">
+            <table id="elements" class="table-div">
+            <tr class="row-header">
+                 <th>ID</th>
+                <th>Nombre Usuario</th>
+                <th>Producto</th>
+                <th>Cantidad</th>
+                <th>Precio Unit. Q. </th>
+                <th>Precio total  Q.</th>
+
+
+
+              </tr>
+            {% for element in orders %}
+            <tr>
+                <td>{{ element[3] }}</td>
+                <td>{{ element[2] }}</td>
+                <td>{{ element[6]}}</td>
+                <td>{{ element[4] }}</td>
+                <td>Q.{{ element[7] }}</td>
+                <td>Q.{{ element[5] }}</td>
+
+              </tr>
+            {% endfor %}
+            </table>
+            <button class="button btn-edit" id="addButton" onclick="toggleAddOrder()"><span>Agregar Pedido</span></button>
+            <script src="{{ url_for('static', filename='script.js') }}"></script>
+
+        </div>
+        </div>
+    </div>
+{%  else %}
+    <div class="empty-div">
+        <p>Parece ser que no tienes pedidos aun!</p>
+        <button class="button btn-edit button-empty" onclick="toggleAddOrder()"><span>Agregar Pedido</span></button>
+    </div>
+
+{% endif %}
+    {% endblock %}

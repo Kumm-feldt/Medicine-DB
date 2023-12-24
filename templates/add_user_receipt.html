@@ -1,0 +1,48 @@
+{% extends 'base.html' %}
+{% block h1 %} AGREGAR CLIENTE {% endblock %}
+{%block content%}
+    <div class="wrapper small-div">
+
+    <div class="information ">
+
+        <form method="POST" id="receipt" action="{{ url_for('add_user') }}">
+                <input type="text" placeholder="{name}" name="name" class="inputs">
+                <input type="submit" placeholder="Agregar" name="submit" class="inputs">
+
+        </form>
+       
+    </div>
+
+    {% if data_user %}
+    <div class="user-div" >
+        <div class="user-info'div">
+            <table id="elements" class="table-div">
+            <tr class="row-header">
+                 <th>ID</th>
+                <th>Nombre Usuario</th>
+                <th>Producto</th>
+                <th>Cantidad</th>
+                <th>Precio Unit. Q. </th>
+                <th>Precio total  Q.</th>
+                
+    
+    
+              </tr>
+            {% for element in orders %}
+            <tr>
+                <td>{{ element[3] }}</td>
+                <td>{{ element[2] }}</td>
+                <td>{{ element[6]}}</td>
+                <td>Q.{{ element[7] }}</td>
+                <td>Q.{{ element[5] }}</td>
+    
+              </tr>
+            {% endfor %}
+            </table>
+        </div>
+        </div>
+{% endif %}
+
+
+    </div>
+    {% endblock %}

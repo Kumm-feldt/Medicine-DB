@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <!--<a href="https://www.flaticon.com/free-icons/raccoon" title="raccoon icons">Raccoon icons created by Freepik - Flaticon</a>-->
+    <meta charset="UTF-8">
+    <title>Raccoon DB</title>
+    <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='css/style.css') }}">
+    <script src="{{ url_for('static', filename='script.js') }}"></script>
+    <!--FONT AWESOME-->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+
+    <!--GOOGLE FONTS-->
+    <link rel="preconnect" href="https://fonts.gstatic.com">
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka+One&family=Play&display=swap" rel="stylesheet"> 
+
+    <style>
+        /* nav barx*/
+
+        nav{
+            margin-top: 20px;
+        }
+        .nav-li li{
+            margin-right: 60px;
+            margin-left: 60px;
+          
+        }
+        .nav-li li a{
+        display: block;
+        color: black;
+        text-align: center;
+        padding: 14px 16px;
+        text-decoration: none;
+
+        }
+
+        .nav-li li a:hover:not(.active) {
+        background-color: #111;
+        color: white;
+        border-radius: 5px;
+        }
+
+        .nav-li .active {
+        background-color: #180c56;
+        color: white;
+        border-radius: 5px;
+        }
+
+
+    </style>
+</head>
+
+<body>
+    <header>
+        <div class="header-div">
+            <img src="/static/raccoon.png" alt="Raccoon"> <p>RACCOON's DB</p> 
+        </div>
+    </header>
+    <h1>{% block h1 %}{% endblock %}</h1>
+    <div class="nav-div">
+        <nav class="nav-bar">
+            <ul class="nav-li">
+                <li><a href="{{ url_for('receipt') }}">Recibo</a></li>
+                <li><a href="{{ url_for('orders') }}">Ordenes</a></li>
+                <li><a href="#contact">Contact</a></li>
+                <li style="float:right"><a class="active" href="{{ url_for('index') }}">Product DB</a></li>
+            </ul>
+        </nav>
+    </div>
+    <div class="content">
+        {% block content %} {% endblock %}
+    </div>
+    <footer>
+        <div class="footer">
+        <div class="row">
+        <a href="https://www.facebook.com/anthony.kummerfeldt"><i class="fa fa-facebook"></i></a>
+        <a href="https://www.instagram.com/akummerfeldt/"><i class="fa fa-instagram"></i></a>
+        <a href="https://twitter.com/kumm_erf"><i class="fa fa-twitter"></i></a>
+        </div>
+        
+        <div class="row">
+        <ul>
+        <li><a href="#">Contact us</a></li>
+        <li><a href="#">Our Services</a></li>
+        <li><a href="#">Career</a></li>
+        </ul>
+        </div>
+        
+        <div class="row">
+        KUMMERFELDT Copyright © 2023 All rights reserved 
+        </div>
+        </div>
+        </footer>
+</body>
+
+    
+</html>

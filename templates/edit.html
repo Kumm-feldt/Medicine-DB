@@ -1,0 +1,35 @@
+{% extends 'base.html' %}
+{% block h1 %} BASE DE DATOS MEDICINAS {% endblock %}
+
+{%block content%}
+    <div class="edit-div" id="searchMedCode">
+        <div id="editField">
+          <form method="POST" id="searchCode">
+          <input class="input" type="text" id="editableField" placeholder="Codigo" name="med_code">
+          <button class="btn search-btn" onclick="toggleEditProduct();"> Buscar</button>
+         </form>
+        </div>
+
+ <script src="{{ url_for('static', filename='script.js') }}"></script>
+  </div>
+  {% if med_code %}
+  <div id="formDivEdit">
+    <form method="POST" id="changeDataForm" action="{{ url_for('edit') }}">
+        <input type="hidden" name="med_code" value="{{ med_code }}">
+        <ul class="edit-list">
+            <li class="name-li">Nombre</li>
+            <li>Precio $.</li>
+            <li>Posible Precio de Venta</li>
+            <li class="url-li">URL</li>
+        </ul>
+        {% for tuple in result %}
+        {% for element in tuple %}
+        <input class="input" type="text" value="{{ element }}" name="changeList[]">
+        {% endfor %}
+        {% endfor %}
+        <input type="submit" class="btn search-btn" value="Cambiar">
+    </form>
+    </div>
+{% endif%}
+
+{% endblock%}
