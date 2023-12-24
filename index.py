@@ -600,5 +600,4 @@ def delete_product(order_id):
 
 if __name__ == '__main__':
     create_db()
-    app.debug = True
     app.run()
