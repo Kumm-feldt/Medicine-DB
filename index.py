@@ -5,20 +5,33 @@ from sqlite3 import Error
 
 tax = 0.0975
 quetzal = 7.85
+db_name = "test.db"
 
 
-
-
-# db functions
-def create_connection(db_file):
-    """Create a database connection to a SQLite database."""
-    connection = None
+# DB functions
+def create_connection(database):
+    """ Create a database connection to a SQLite database """
+    conn = None
     try:
-        connection = sqlite3.connect(db_file)
-        print(f"Connected to {db_file}")
+        conn = sqlite3.connect(database)
+        print(f"Connected to SQLite version {sqlite3.version}")
+        return conn
     except Error as e:
-        print(e)
-    return connection
+        print("Error connecting to the database:", e)
+
+    return conn
+
+
+def table_empty(table_name):
+    with sqlite3.connect(db_name) as conn:
+        cursor = conn.cursor()
+        cursor.execute(f'SELECT * FROM {table_name} LIMIT 1')
+        result = cursor.fetchone()
+
+        if result is None:
+            return True
+        else:
+            return False
 
 
 def create_table(connection, create_table_sql):
@@ -31,24 +44,11 @@ def create_table(connection, create_table_sql):
         print(e)
 
 
-def table_empty(table_name):
-    connection = sqlite3.connect("med_db.db")
-    cursor = connection.cursor()
-    cursor.execute(f'SELECT * FROM {table_name} LIMIT 1')
-    result = cursor.fetchone()
-
-    if result is None:
-        return True
-    else:
-        return False
-
-
 def create_db():
-    database = "med_db.db"
 
     # SQL statements to create tables
     users_table_sql = """
-    CREATE TABLE IF NOT EXISTS users (
+    CREATE TABLE users (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         username TEXT NOT NULL UNIQUE
     );
@@ -99,7 +99,7 @@ def create_db():
 """
 
     # create a database connection
-    connection = create_connection(database)
+    connection = create_connection(db_name)
 
     if connection is not None:
         # create tables
@@ -131,13 +131,11 @@ def price_taxed(net_price):
 
 
 def count_elements(table):
-    conn = sqlite3.connect('med_db.db')
-    cursor = conn.cursor()
-    query_count = f"SELECT COUNT(*) FROM {table};"
-    cursor.execute(query_count)
-    count = cursor.fetchone()
-    conn.close()
-
+    with sqlite3.connect(db_name) as conn:
+        cursor = conn.cursor()
+        query_count = f"SELECT COUNT(*) FROM {table};"
+        cursor.execute(query_count)
+        count = cursor.fetchone()
     return count
 
 
@@ -155,40 +153,37 @@ def code_generator():
 
 
 def update_products_db(name, current_price, sell_public_q, url, med_code):
-    conn = sqlite3.connect('med_db.db')
-    cursor = conn.cursor()
-    query = "UPDATE products SET name = ?, currentPrice = ?, " \
-            "sellPublicQuetzal = ?, url = ? WHERE medCode = ?"
-    cursor.execute(query, (name, current_price, sell_public_q, url, med_code))
-    conn.commit()
-    conn.close()
+    with sqlite3.connect(db_name) as conn:
+        cursor = conn.cursor()
+        query = "UPDATE products SET name = ?, currentPrice = ?, " \
+                "sellPublicQuetzal = ?, url = ? WHERE medCode = ?"
+        cursor.execute(query, (name, current_price, sell_public_q, url, med_code))
+        conn.commit()
 
 
 def search_element(table, column, med_code="med000", product_id=0):
-    conn = sqlite3.connect('med_db.db')
-    cursor = conn.cursor()
-    if med_code != "med000" and product_id == 0:
-        query = f"SELECT {column} FROM {table} where medCode=?;"
-        cursor.execute(query, (med_code,))
-    elif med_code == "med000":
-        query = f"SELECT {column} FROM {table} WHERE id=?;"
-        cursor.execute(query, (product_id,))
+    with sqlite3.connect(db_name) as conn:
+        cursor = conn.cursor()
+        if med_code != "med000" and product_id == 0:
+            query = f"SELECT {column} FROM {table} where medCode=?;"
+            cursor.execute(query, (med_code,))
+        elif med_code == "med000":
+            query = f"SELECT {column} FROM {table} WHERE id=?;"
+            cursor.execute(query, (product_id,))
 
-    result = cursor.fetchone()
-    conn.commit()
-    conn.close()
-    if result:
-        return result[0]
-    else:
-        return None
+        result = cursor.fetchone()
+        conn.commit()
+        if result:
+            return result[0]
+        else:
+            return None
 
 
-def show_products_receipt(table="receipt"):
-    with sqlite3.connect('med_db.db') as conn:
+def show_table(table):
+    with sqlite3.connect(db_name) as conn:
         cursor = conn.cursor()
         query = f"SELECT * FROM {table};"
         products = cursor.execute(query).fetchall()
-    conn.close()
     return products
 
 
@@ -197,7 +192,7 @@ def insert_element(table, column, value):
         raise ValueError("Invalid table or column name")
 
     # Use a context manager for the database connection
-    with sqlite3.connect('med_db.db') as conn:
+    with sqlite3.connect(db_name) as conn:
         cursor = conn.cursor()
 
         # Use parameterized queries to prevent SQL injection
@@ -212,7 +207,7 @@ def insert_column_values(table, columns_values):
     if not table.isidentifier():
         raise ValueError("Invalid table name")
 
-    with sqlite3.connect('med_db.db') as conn:
+    with sqlite3.connect(db_name) as conn:
         cursor = conn.cursor()
 
         # Use parameterized queries to prevent SQL injection
@@ -224,40 +219,34 @@ def insert_column_values(table, columns_values):
         cursor.execute(query, tuple(columns_values.values()))
         conn.commit()
 
-        cursor.close()
-        conn.close()
-
-
 
 def get_balance():
-    conn = sqlite3.connect('med_db.db')
-    cursor = conn.cursor()
-    query = "SELECT payedQuetzal, balanceBankQuetzal FROM balance"
-    cursor.execute(query)
-    result = cursor.fetchall()
-    if len(result) != 0:
-        total_q = round(get_total("receipt", "totalPriceQuetzal"),2)
-        total_d = round(total_q / quetzal, 2)
-        payed_q = round(get_total("balance", "payedQuetzal"),2)
-        payed_d = round(payed_q / quetzal, 2)
-        balance_bank_q = round(get_total("balance", "balanceBankQuetzal"),2)
-        balance_bank_d = round(balance_bank_q / quetzal, 2)
-        remainder_q = round(total_q - payed_q, 2)
-        remainder_d = round(remainder_q / quetzal, 2)
-    else:
-        total_q = get_total("receipt", "totalPriceQuetzal")
-        total_d = round(total_q / quetzal, 2) if total_q != 0 else 0
-        payed_q, payed_d, balance_bank_q, balance_bank_d, remainder_q, remainder_d = 0, 0, 0, 0, 0, 0
+    with sqlite3.connect(db_name) as conn:
+        cursor = conn.cursor()
+        query = "SELECT payedQuetzal, balanceBankQuetzal FROM balance"
+        cursor.execute(query)
+        result = cursor.fetchall()
 
-    cursor.close()
-    conn.close()
+        if result is not None:
+            total_q = round(get_total("receipt", "totalPriceQuetzal"), 2)
+            total_d = round(total_q / quetzal, 2)
+            payed_q = round(get_total("balance", "payedQuetzal"), 2)
+            payed_d = round(payed_q / quetzal, 2)
+            balance_bank_q = round(get_total("balance", "balanceBankQuetzal"), 2)
+            balance_bank_d = round(balance_bank_q / quetzal, 2)
+            remainder_q = round(total_q - payed_q, 2)
+            remainder_d = round(remainder_q / quetzal, 2)
+        else:
+            total_q = get_total("receipt", "totalPriceQuetzal")
+            total_d = round(total_q / quetzal, 2) if total_q != 0 else 0
+            payed_q, payed_d, balance_bank_q, balance_bank_d, remainder_q, remainder_d = 0, 0, 0, 0, 0, 0
 
     return total_q, total_d, payed_q, payed_d, balance_bank_q, balance_bank_d, remainder_q, remainder_d
 
 
 def add_data_receipt_db(product, amount, price, price_q, total_price):
     # check this
-    conn = sqlite3.connect('med_db.db')
+    conn = sqlite3.connect(db_name)
     cursor = conn.cursor()
     query = """INSERT INTO receipt
                           (product, amount, price, priceQuetzal,totalPriceQuetzal)
@@ -271,7 +260,7 @@ def add_data_receipt_db(product, amount, price, price_q, total_price):
 
 def get_total(table, column):
     total_price = 0
-    with sqlite3.connect('med_db.db') as conn:
+    with sqlite3.connect(db_name) as conn:
         cursor = conn.cursor()
         query = f"SELECT {column} FROM {table};"
         total = cursor.execute(query).fetchall()
@@ -288,15 +277,50 @@ def get_total(table, column):
 
 
 def show_updated_products_db(med_code):
-    conn = sqlite3.connect('med_db.db')
-    cursor = conn.cursor()
-    query = "SELECT name, currentPrice, sellPublicQuetzal, url FROM products WHERE medCode=?"
-    cursor.execute(query, (med_code,))
-    result = cursor.fetchall()
-    cursor.close()
-    conn.close()
-    db_names = ["name", "currentPrice", "sellPublicQuetzal", "url"]
+    with sqlite3.connect(db_name) as conn:
+        cursor = conn.cursor()
+        query = "SELECT name, currentPrice, sellPublicQuetzal, url FROM products WHERE medCode=?"
+        cursor.execute(query, (med_code,))
+        result = cursor.fetchall()
+        cursor.close()
+        conn.close()
+        db_names = ["name", "currentPrice", "sellPublicQuetzal", "url"]
     return result, db_names, bool(result)
+
+
+def handle_product_form(form_data):
+    if 'product' in form_data and 'amount' in form_data and 'price' in form_data:
+        product = request.form['product']
+        amount = int(request.form['amount'])
+        price = price_taxed(float(request.form['price']))
+        price_q = round(price * quetzal, 2)
+        total_price = round(price_q * amount, 2)
+        add_data_receipt_db(product, amount, price, price_q, total_price)
+
+
+def handle_balance_form(form_data):
+    if 'add_payment' in form_data:
+        add_payment = round(float(form_data['add_payment']), 2)
+        insert_element("balance", "payedQuetzal", add_payment)
+        insert_element("balance", "balanceBankQuetzal", add_payment)
+
+    if 'add_bank_balance' in form_data:
+        bank_balance = round(float(form_data['add_bank_balance']), 2)
+        insert_element("balance", "balanceBankQuetzal", bank_balance)
+
+
+def find_or_create_user_id(cursor, username):
+    user_id_query = "SELECT id FROM users WHERE username = ?"
+    user_id_result = cursor.execute(user_id_query, (username,)).fetchone()
+    if user_id_result is not None:
+        user_id = user_id_result[0]
+
+    else:
+        # If the username doesn't exist, insert a new user
+        insert_column_values("users", {"username": username})
+        # Retrieve the user_id for the newly inserted user
+        user_id = cursor.lastrowid
+    return user_id
 
 
 app = Flask(__name__)
@@ -304,12 +328,10 @@ app = Flask(__name__)
 
 @app.route('/', methods=["GET", "POST"])
 def index():
-    with sqlite3.connect('med_db.db') as conn:
+    with sqlite3.connect(db_name) as conn:
         cursor = conn.cursor()
         query = """SELECT * FROM products;"""
         products = cursor.execute(query).fetchall()
-    cursor.close()
-    conn.close()
     return render_template("index.html", products=products)
 
 
@@ -323,31 +345,28 @@ def edit():
             return render_template("edit.html")
         else:
             result, db_names, record_exists = show_updated_products_db(med_code)
+
             change_list = request.form.getlist('changeList[]')
             if not record_exists:
                 return render_template("error.html", error_message="Invalid form data")
 
             # If there is data in changeList it means it is ready to update Data
             if len(change_list) != 0:
-                name = request.form.getlist('changeList[]')[0]
-                current_price = request.form.getlist('changeList[]')[1]
+                name = change_list[0]
+                current_price = change_list[1]
                 current_price_db = search_element("products", "currentPrice", med_code)
-                sell_public_q = request.form.getlist('changeList[]')[2]
-                url = request.form.getlist('changeList[]')[3]
+                sell_public_q = change_list[2]
+                url = change_list[3]
 
-                # If prices in db do not match with price given the db will be updated to the price given,
+                # If prices in DB do not match with price given in the input, the DB will be updated to the price given,
                 # otherwise it will not be modified, nor taxed again
                 if round(current_price_db, 2) != round(float(current_price), 2):
-                    current_price = price_taxed(request.form.getlist('changeList[]')[1])
+                    current_price = price_taxed(change_list[1])
 
                 update_products_db(name, current_price, sell_public_q, url, med_code)
 
                 result, db_names, record_exists = show_updated_products_db(med_code)
             return render_template("edit.html", result=result, db_names=db_names, med_code=med_code)
-
-    else:
-        result = None
-        db_names = None
 
     return render_template("edit.html")
 
@@ -356,7 +375,7 @@ def edit():
 def add_inventory():
     if request.method == 'POST':
         form_data = request.form
-        check_elements =['product','price_d', 'sell_public', 'url']
+        check_elements = ['product', 'price_d', 'sell_public', 'url']
         # Validate form data
         if not validate_form_data(form_data, check_elements):
             # If validation fails, you can redirect or render an error page
@@ -371,16 +390,17 @@ def add_inventory():
             return render_template("error.html", error_message="Invalid form data")
 
         med_code = code_generator()
+
         insert_column_values("products", {
                     "medCode": med_code,
                     "name": product,
-                    "currentPrice": price_d,
-                    "priceQuetzal": price_q,
-                    "sellPublicQuetzal": sell_public,
+                    "currentPrice": int(price_d),
+                    "priceQuetzal": int(price_q),
+                    "sellPublicQuetzal": int(sell_public),
                     "url": url,
                 })
 
-    products = show_products_receipt("products")
+    products = show_table("products")
     return render_template("add_product.html", products=products)
 
 
@@ -388,38 +408,24 @@ def add_inventory():
 def receipt():
     # Get info when page is loaded
     total_q, total_d, payed_q, payed_d, balance_bank_q, balance_bank_d, remainder_q, remainder_d = get_balance()
-    products = show_products_receipt()
-    total_price_products = get_total("receipt", "totalPriceQuetzal")
+    products = show_table("receipt")
+    # total_price_products = get_total("receipt", "totalPriceQuetzal")
     if request.method == 'POST':
         form_data = request.form
-        check_elements = ['product', 'amount','price', 'sell_public', 'url']
+        check_elements_product = ['product', 'amount', 'price']
+        check_elements_balance = ['add_payment', 'add_bank_balance']
 
-        # Validate form data of products
-        if not validate_form_data(form_data, check_elements):
-            # If validation fails, you can redirect or render an error page
+        if not validate_form_data(form_data, check_elements_product) and \
+                validate_form_data(form_data, check_elements_balance):
             return render_template("error.html", error_message="Invalid form data")
 
         # Get info ONLY from products form
-        if 'product' in request.form and 'amount' in request.form and 'price' in request.form:
-            product = request.form['product']
-            amount = int(request.form['amount'])
-            price = price_taxed(float(request.form['price']))
-            price_q = round(price * quetzal, 2)
-            total_price = round(price_q * amount,2)
-            print(total_price)
-            add_data_receipt_db(product, amount, price, price_q, total_price)
-            total_price_products = get_total("receipt", "totalPriceQuetzal")
-            products = show_products_receipt()
+        handle_product_form(form_data)
 
         # Get info ONLY from balance form
-        if 'add_payment' in request.form:
-            add_payment = round(float(request.form['add_payment']), 2)
-            insert_element("balance", "payedQuetzal", add_payment)
-            insert_element("balance", "balanceBankQuetzal", add_payment)
+        handle_balance_form(form_data)
 
-        if 'add_bank_balance' in request.form:
-            bank_balance = round(float(request.form['add_bank_balance']), 2)
-            insert_element("balance", "balanceBankQuetzal", bank_balance)
+        products = show_table("receipt")
 
         # refresh all the variables when add data
         total_q, total_d, payed_q, payed_d, balance_bank_q, balance_bank_d, remainder_q, remainder_d = get_balance()
@@ -437,47 +443,39 @@ def receipt():
 
 @app.route('/receipt/user', methods=["GET", "POST"])
 def add_user():
-    conn = sqlite3.connect('med_db.db')
-    cursor = conn.cursor()
-    data_user = None
+    with sqlite3.connect(db_name) as conn:
+        cursor = conn.cursor()
+        data_user = None
 
-    if 'name' in request.form:
-        user_name = request.form['name']
-        if table_empty("orders") is True:
-            data_user = 0
+        if 'name' in request.form:
+            user_name = request.form['name']
+            if table_empty("orders") is True:
+                data_user = 0
 
-        # Find user_id based on the given user_name
-        user_id_query = "SELECT id FROM users WHERE username = ?"
-        user_id_result = cursor.execute(user_id_query, (user_name,)).fetchone()
+            # Find user_id based on the given user_name
+            user_id_query = "SELECT id FROM users WHERE username = ?"
+            user_id_result = cursor.execute(user_id_query, (user_name,)).fetchone()
 
-        if user_id_result is None:
-            insert_element("users", "username", user_name)
+            if user_id_result is None:
+                insert_element("users", "username", user_name)
 
-        products = show_products_receipt()
-        conn.close()
-        return redirect(url_for("receipt_order", products=products, data_user=data_user, user_name=user_name))
-    else:
-        user_name = "Cliente"
-        products = show_products_receipt()
-        conn.close()
-        return render_template("add_user_receipt.html", products=products, data_user=data_user, user_name=user_name)
+            products = show_table("receipt")
+            return redirect(url_for("receipt_order", products=products, data_user=data_user, user_name=user_name))
+        else:
+            user_name = "Cliente"
+            products = show_table("receipt")
+            return render_template("add_user_receipt.html", products=products, data_user=data_user, user_name=user_name)
 
 
 @app.route('/receipt/add_order', methods=["GET", "POST"])
 def receipt_order():
-    username = request.args.get('user_name')
-    conn = sqlite3.connect('med_db.db')
+    username = request.args.get('user_name') or request.form.get('user_name') or "Cliente"
+    conn = create_connection(db_name)
     cursor = conn.cursor()
+    if not username:
+        return redirect(url_for("add_user"))
 
-    if username is None:
-        username = request.form.get('user_name')
-        if username is None:
-            return redirect(url_for("add_user"))
-
-    if table_empty("orders"):
-        data_user = None
-    else:
-        data_user = "data_available"
+    data_user = "data_available" if not table_empty("orders") else None
 
     if request.method == 'POST':
         form_data = request.form
@@ -488,9 +486,9 @@ def receipt_order():
             error_message = f"Not amount or id provided"
             return render_template("error.html", error_message=error_message)
 
-        username = request.form.get('user_name')
-        amount = int(request.form['amount'])
-        product_id = int(request.form['id'])
+        username = form_data.get('user_name')
+        amount = int(form_data['amount'])
+        product_id = int(form_data['id'])
         product_name = search_element("receipt", "product", "med000", product_id)
         price_dollar = search_element("receipt", "price", "med000", product_id)
 
@@ -507,16 +505,7 @@ def receipt_order():
             username = "Cliente"
 
         # Find user_id based on the given user_name
-        user_id_query = "SELECT id FROM users WHERE username = ?"
-        user_id_result = cursor.execute(user_id_query, (username,)).fetchone()
-
-        if user_id_result is not None:
-            user_id = user_id_result[0]
-        else:
-            # If the username doesn't exist, insert a new user
-            insert_column_values("users", {"username": username})
-            # Retrieve the user_id for the newly inserted user
-            user_id = cursor.lastrowid
+        user_id = find_or_create_user_id(cursor, username)
 
         # Find product details
         product_query = "SELECT * FROM receipt WHERE id = ?"
@@ -538,25 +527,26 @@ def receipt_order():
             return render_template("error.html", error_message=error_message)
 
         # Fetch order details
-        order = show_products_receipt("orders")
+        order = show_table("orders")
+        products = show_table("receipt")
 
-        products = show_products_receipt()
-        conn.close()
         if table_empty("orders") is True:
             data_user = "data"
 
-        return render_template("user_receipt.html", orders=order, products=products, data_user=data_user, user_name=username)
+        return render_template("user_receipt.html", orders=order, products=products, data_user=data_user,
+                               user_name=username)
 
-    order = show_products_receipt("orders")
-    products = show_products_receipt()
+    order = show_table("orders")
+    products = show_table("receipt")
     conn.close()
 
-    return render_template("user_receipt.html", orders=order, products=products, data_user=data_user, user_name=username)
+    return render_template("user_receipt.html", orders=order, products=products, data_user=data_user,
+                           user_name=username)
 
 
 @app.route('/orders')
 def orders():
-    order = show_products_receipt("orders")
+    order = show_table("orders")
     return render_template("orders.html", orders=order)
 
 
@@ -566,38 +556,39 @@ def delete_order(order_id):
     username = request.args.get('username')
     if username is None:
         username = request.form.get('username')
-    conn = sqlite3.connect('med_db.db')
-    cursor = conn.cursor()
+    with sqlite3.connect(db_name) as conn:
+        cursor = conn.cursor()
 
-    # Delete the record from the 'orders' table based on order_id
-    delete_query = "DELETE FROM orders WHERE id = ?"
-    cursor.execute(delete_query, (order_id,))
+        # Delete the record from the 'orders' table based on order_id
+        delete_query = "DELETE FROM orders WHERE id = ?"
+        cursor.execute(delete_query, (order_id,))
 
-    # Commit the changes to the database
-    conn.commit()
-    conn.close()
+        # Commit the changes to the database
+        conn.commit()
 
     # Redirect back to the receipt page after deletion
-    return redirect(url_for('receipt_order', username = username))
+    return redirect(url_for('receipt_order', username=username))
 
 
 @app.route('/delete_data/<int:order_id>', methods=['POST'])
 def delete_product(order_id):
-    conn = sqlite3.connect('med_db.db')
-    cursor = conn.cursor()
+    with sqlite3.connect(db_name) as conn:
+        cursor = conn.cursor()
 
-    # Delete the record from the 'products' table based on order_id
-    delete_query = "DELETE FROM products WHERE id = ?"
-    cursor.execute(delete_query, (order_id,))
+        # Delete the record from the 'products' table based on order_id
+        delete_query = "DELETE FROM products WHERE id = ?"
+        cursor.execute(delete_query, (order_id,))
 
-    # Commit the changes to the database
-    conn.commit()
-    conn.close()
+        # Commit the changes to the database
+        conn.commit()
 
     # Redirect back to the receipt page after deletion
     return redirect(url_for('index'))
 
 
 if __name__ == '__main__':
+    # Create DB if it does not exist
     create_db()
+
+    # Run App
     app.run()
