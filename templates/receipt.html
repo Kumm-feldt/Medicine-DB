@@ -1,7 +1,7 @@
 {% extends 'base.html' %}
 {% block h1 %} RECIBO DE PEDIDO {% endblock %}
 {%block content%}
-    <div class="wrapper">
+    <div class="wrapper wrapper-receipt">
     <h2 class="title-h2">Agregar Producto</h2>
     <div class="information">
         <form method="POST" id="receipt" action="{{ url_for('receipt') }}">
